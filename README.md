@@ -16,6 +16,7 @@ Este projeto foi construído pensando na retenção máxima de foco, rodando o c
   - Realizou um compromisso e clicou em "feito"? O aplicativo renomeia silenciosamente esse evento no seu GCalendar usando um `[CONCLUÍDO]`.
 - 💾 **Persistência Baseada em Arquivos:** Dados são salvos num robusto `.json` no servidor local, de forma que você não sofre dependência de nuvem paga a menos que deseje o backup.
 - 📥 **Exportações Completas:** Crie PDFs ou tire snapshots em `.csv` se você é um daqueles estudantes que adoram estatísticas externas.
+- ✉️ **Notificação Automática (Ngrok):** Um script robô independente varre a inicialização do túnel na sua máquina e encaminha o link ativo direto para o seu e-mail de forma autônoma!
 
 ## 🚀 Como instalar (Passo a Passo)
 

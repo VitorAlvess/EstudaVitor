@@ -5,3 +5,4 @@ client_secret_*.json
 *.log
 .DS_Store
 {public,data}/
+iniciar_escondido.vbs
