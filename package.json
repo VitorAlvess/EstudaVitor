@@ -1,0 +1,22 @@
+{
+  "name": "estudavitor",
+  "version": "1.0.0",
+  "description": "Organizador pessoal com Calendário, Tarefas e Pomodoro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "produtividade",
+    "pomodoro",
+    "tarefas",
+    "calendario"
+  ],
+  "author": "EstudaVitor",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "googleapis": "^171.4.0",
+    "open": "^11.0.0"
+  }
+}

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EstudaVitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+
+ 
+
+</head> 
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Estuda<span>Vitor</span></div>
+    <nav>
+      <button class="active" onclick="showTab('dashboard')">🏠 Início</button>
+      <button onclick="showTab('calendar')">📅 Calendário</button>
+      <button onclick="showTab('tasks')">✅ Tarefas</button>
+      <button onclick="showTab('pomodoro')">🍅 Pomodoro</button>
+      <button onclick="showTab('export')">📊 Relatórios</button>
+      <button onclick="showTab('config')">⚙️ Configs</button>
+    </nav>
+    <div class="header-right">
+      <span class="clock" id="clock">--:--</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab active">
+      <div class="section-header">
+        <div class="section-title" id="dash-greeting">Bom dia! 👋</div>
+        <span style="color:var(--muted);font-size:0.85rem" id="dash-date"></span>
+      </div>
+      <div class="dashboard-grid">
+        <div class="stat-card purple">
+          <div class="stat-label">Tarefas hoje</div>
+          <div class="stat-num" id="stat-today-tasks">0</div>
+          <div style="font-size:0.75rem;color:var(--muted)" id="stat-today-done">0 concluídas</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Pomodoros hoje</div>
+          <div class="stat-num" id="stat-pomos">0</div>
+          <div style="font-size:0.75rem;color:var(--muted)" id="stat-pomo-time">0 min focados</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Dias estudados (mês)</div>
+          <div class="stat-num" id="stat-study-days">0</div>
+          <div style="font-size:0.75rem;color:var(--muted)" id="stat-study-hours">0h totais</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-label">Tarefas pendentes</div>
+          <div class="stat-num" id="stat-pending">0</div>
+          <div style="font-size:0.75rem;color:var(--muted)">total geral</div>
+        </div>
+      </div>
+      <div class="dashboard-bottom">
+        <div class="card">
+          <div class="card-title">Tarefas de hoje</div>
+          <div id="dash-today-tasks"><div class="empty-state">Nenhuma tarefa para hoje</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Últimas sessões Pomodoro</div>
+          <div id="dash-recent-pomos"><div class="empty-state">Nenhuma sessão ainda</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="tab-calendar" class="tab">
+      <div class="section-header">
+        <div class="section-title">Calendário</div>
+      </div>
+      <div class="calendar-layout">
+        <div class="card">
+          <div class="cal-header">
+            <div class="cal-nav">
+              <button onclick="changeMonth(-1)">‹</button>
+              <div class="cal-month" id="cal-month-label"></div>
+              <button onclick="changeMonth(1)">›</button>
+            </div>
+            <button class="btn btn-ghost" onclick="goToToday()" style="font-size:0.8rem;padding:6px 12px">Hoje</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="side-panel">
+          <div class="card">
+            <div class="selected-date-title" id="selected-date-title">Selecione um dia</div>
+            <div class="task-input-row">
+              <input type="text" id="new-cal-task" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')addCalTask()" />
+              <button class="btn btn-primary" onclick="addCalTask()">+</button>
+            </div>
+            <div id="cal-task-list"><div class="empty-state">Selecione um dia no calendário</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="tab-tasks" class="tab">
+      <div class="section-header">
+        <div class="section-title">Tarefas</div>
+        <button class="btn btn-ghost" onclick="syncGoogleCalendar()" style="font-size:0.8rem">🔄 Sincronização Google</button>
+      </div>
+      <div class="tasks-layout">
+        <div class="card">
+          <div class="card-title">Nova Tarefa</div>
+          <div class="add-task-form">
+            <input type="text" id="task-title" placeholder="Título da tarefa..." />
+            <input type="date" id="task-date" />
+            <select id="task-priority">
+              <option value="media">Prioridade Média</option>
+              <option value="alta">🔴 Alta</option>
+              <option value="baixa">🟢 Baixa</option>
+            </select>
+            <input type="text" id="task-note" placeholder="Nota (opcional)..." />
+            <button class="btn btn-primary" onclick="addTask()">Adicionar Tarefa</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Pendentes</div>
+          <div id="task-pending-list"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px" class="card">
+        <div class="card-title">Todas as Tarefas</div>
+        <div id="task-all-list"></div>
+      </div>
+    </div>
+
+    <!-- POMODORO -->
+    <div id="tab-pomodoro" class="tab">
+      <div class="section-header">
+        <div class="section-title">Pomodoro</div>
+      </div>
+      <div class="pomodoro-layout">
+        <div class="card pomo-center">
+          <div class="pomo-mode-tabs">
+            <button class="pomo-mode-btn active" id="btn-foco" onclick="setMode('foco')">Foco</button>
+            <button class="pomo-mode-btn" id="btn-pausa" onclick="setMode('pausa')">Pausa Curta</button>
+            <button class="pomo-mode-btn" id="btn-longa" onclick="setMode('longa')">Pausa Longa</button>
+          </div>
+          <div class="pomo-ring-wrap">
+            <svg class="pomo-ring" width="200" height="200" viewBox="0 0 200 200">
+              <circle class="pomo-ring-bg" cx="100" cy="100" r="88"/>
+              <circle class="pomo-ring-progress" id="pomo-ring-prog" cx="100" cy="100" r="88"
+                stroke-dasharray="553" stroke-dashoffset="0"/>
+            </svg>
+            <div class="pomo-time" id="pomo-display">25:00</div>
+          </div>
+          <div class="pomo-label" id="pomo-mode-label">FOCO</div>
+          <div class="pomo-controls">
+            <button class="pomo-btn pomo-btn-sec" onclick="resetPomo()" title="Reiniciar">↺</button>
+            <button class="pomo-btn pomo-btn-main" id="pomo-play-btn" onclick="togglePomo()">▶</button>
+            <button class="pomo-btn pomo-btn-sec" onclick="skipPomo()" title="Pular">⏭</button>
+          </div>
+          <div class="pomo-sessions" id="pomo-dots"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-title">Configurações</div>
+            <div class="pomo-settings-grid">
+              <div class="pomo-setting">
+                <label>Foco (min)</label>
+                <input type="number" id="cfg-foco" value="25" min="1" max="120" onchange="updatePomoConfig()" />
+              </div>
+              <div class="pomo-setting">
+                <label>Pausa Curta (min)</label>
+                <input type="number" id="cfg-pausa" value="5" min="1" max="60" onchange="updatePomoConfig()" />
+              </div>
+              <div class="pomo-setting">
+                <label>Pausa Longa (min)</label>
+                <input type="number" id="cfg-longa" value="15" min="1" max="60" onchange="updatePomoConfig()" />
+              </div>
+              <div class="pomo-setting">
+                <label>Sessões até pausa longa</label>
+                <input type="number" id="cfg-sessions" value="4" min="2" max="8" onchange="updatePomoConfig()" />
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Estudando agora</div>
+            <input type="text" class="pomo-task-input" id="pomo-task" placeholder="O que você está estudando?" />
+            <div class="card-title">Sessões de hoje</div>
+            <div class="session-log" id="session-log">
+              <div class="empty-state">Nenhuma sessão ainda</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div id="tab-export" class="tab">
+      <div class="section-header">
+        <div class="section-title">Relatórios & Exportação</div>
+        <button class="btn btn-primary" onclick="exportAllCSV()">📥 Exportar Tudo (CSV)</button>
+      </div>
+      <div id="export-grid" class="export-grid"></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="tab-config" class="tab">
+      <div class="section-header">
+        <div class="section-title">Configurações & Integrações</div>
+      </div>
+      <div class="config-layout">
+        <div class="card" style="max-width: 600px">
+          <div class="card-title">Google Calendar</div>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">
+            Conecte suas contas do Google para sincronizar suas tarefas e eventos de forma bidirecional. O EstudaVitor marcará como [CONCLUÍDO] as tarefas prontas.
+          </p>
+          <div id="google-accounts-list" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="empty-state">Carregando contas...</div>
+          </div>
+          <button class="btn btn-primary" onclick="window.location.href='/api/google/auth'">+ Conectar Nova Conta Google</button>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border)">
+            <button class="btn btn-ghost" onclick="syncGoogleCalendar()">🔄 Sincronizar Tudo Agora</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+//  STATE & STORAGE
+// ============================================================
+const API = '';  // same-origin
+
+async function apiGet(path) {
+  try { const r = await fetch(API + path); return await r.json(); } catch { return null; }
+}
+async function apiPost(path, body) {
+  try {
+    const r = await fetch(API + path, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    return await r.json();
+  } catch { return null; }
+}
+async function apiDel(path) {
+  try { const r = await fetch(API + path, { method: 'DELETE' }); return await r.json(); } catch { return null; }
+}
+
+// Fallback to localStorage if server unavailable
+function lsGet(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+
+// ============================================================
+//  TOAST
+// ============================================================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+//  CLOCK & GREETING
+// ============================================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  const h = now.getHours();
+  let greet = h < 12 ? 'Bom dia! 🌅' : h < 18 ? 'Boa tarde! ☀️' : 'Boa noite! 🌙';
+  document.getElementById('dash-greeting').textContent = greet;
+  document.getElementById('dash-date').textContent = now.toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ============================================================
+//  TABS
+// ============================================================
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const btns = document.querySelectorAll('nav button');
+  const map = {dashboard:0, calendar:1, tasks:2, pomodoro:3, export:4, config:5};
+  if(btns[map[name]]) btns[map[name]].classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'config') renderConfig();
+  if (name === 'calendar') renderCalendar();
+  if (name === 'tasks') renderTasks();
+  if (name === 'export') renderExport();
+}
+
+// ============================================================
+//  TASKS
+// ============================================================
+let tasks = [];
+
+async function loadTasks() {
+  const data = await apiGet('/api/tasks');
+  if (data) tasks = data;
+  else tasks = lsGet('tasks', []);
+}
+
+async function saveTasks() {
+  lsSet('tasks', tasks);
+  // server sync handled per-operation
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+async function addTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) { toast('Digite o título da tarefa'); return; }
+  const date = document.getElementById('task-date').value || todayStr();
+  const priority = document.getElementById('task-priority').value;
+  const note = document.getElementById('task-note').value.trim();
+  const task = { id: Date.now(), title, date, priority, note, done: false, createdAt: new Date().toISOString() };
+  const res = await apiPost('/api/tasks', task);
+  if (res) tasks = res;
+  else { tasks.push(task); lsSet('tasks', tasks); }
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-note').value = '';
+  renderTasks(); renderCalendar(); renderDashboard();
+  toast('✅ Tarefa adicionada!');
+}
+
+async function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  const res = await apiPost('/api/tasks/' + id + '/toggle', {});
+  if (res) tasks = res;
+  else lsSet('tasks', tasks);
+  renderTasks(); renderDashboard(); renderCalendar();
+}
+
+async function deleteTask(id) {
+  const res = await apiDel('/api/tasks/' + id);
+  if (res) tasks = res;
+  else { tasks = tasks.filter(t => t.id !== id); lsSet('tasks', tasks); }
+  renderTasks(); renderDashboard(); renderCalendar();
+  toast('🗑️ Tarefa removida');
+}
+
+function renderTasks() {
+  const pending = tasks.filter(t => !t.done).sort((a,b) => a.date.localeCompare(b.date));
+  const all = [...tasks].sort((a,b) => b.date.localeCompare(a.date));
+  document.getElementById('task-pending-list').innerHTML = pending.length
+    ? pending.map(t => taskHTML(t)).join('')
+    : '<div class="empty-state">Nenhuma tarefa pendente 🎉</div>';
+  document.getElementById('task-all-list').innerHTML = all.length
+    ? all.map(t => taskHTML(t)).join('')
+    : '<div class="empty-state">Nenhuma tarefa cadastrada</div>';
+  // Set default date to today
+  if (!document.getElementById('task-date').value)
+    document.getElementById('task-date').value = todayStr();
+}
+
+function taskHTML(t) {
+  const isLate = !t.done && t.date < todayStr();
+  return `<div class="task-item ${t.done?'done':''}" style="${isLate?'border-color:rgba(255,107,107,0.4)':''}">
+    <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div>
+    <div style="flex:1">
+      <div class="task-text">${t.title}</div>
+      <div style="font-size:0.73rem;color:var(--muted);margin-top:2px">
+        ${t.date} ${isLate?'⚠️ atrasada':''}
+        ${t.note ? '· '+t.note : ''}
+        ${t.googleEventId ? ' 🔵 GCalendar' : ''}
+      </div>
+    </div>
+    <span class="priority-badge ${t.priority}">${t.priority}</span>
+    <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+  </div>`;
+}
+
+// ============================================================
+//  CALENDAR
+// ============================================================
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let selectedDate = todayStr();
+
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = DAYS.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  const today = todayStr();
+  // Pomodoro study days
+  const sessions = lsGet('pomo_sessions', []);
+  const studyDays = new Set(sessions.map(s => s.date));
+
+  for (let i = 0; i < first; i++) {
+    const d = prevDays - first + 1 + i;
+    const dateStr = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    grid.innerHTML += `<div class="cal-day other-month">${d}</div>`;
+  }
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayTasks = tasks.filter(t => t.date === dateStr);
+    const hasTasks = dayTasks.length > 0;
+    const isToday = dateStr === today;
+    const isSel = dateStr === selectedDate;
+    const isStudied = studyDays.has(dateStr);
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (isSel) cls += ' selected';
+    if (isStudied && !isToday && !isSel) cls += ' studied';
+    
+    let tasksHTML = '';
+    if (hasTasks) {
+      const showCount = 3;
+      const toShow = dayTasks.slice(0, showCount);
+      tasksHTML = '<div class="cal-day-tasks">' + 
+        toShow.map(t => `<div class="cal-mini-task ${t.done?'done':''} ${t.priority || 'media'}" title="${t.title}">${t.title}</div>`).join('') + 
+        (dayTasks.length > showCount ? `<div class="cal-mini-task more">+${dayTasks.length - showCount}</div>` : '') + 
+        '</div>';
+    }
+
+    grid.innerHTML += `<div class="${cls}" onclick="selectDate('${dateStr}')"><div class="cal-day-num">${d}</div>${tasksHTML}</div>`;
+  }
+  renderSelectedDate();
+}
+
+function selectDate(dateStr) {
+  selectedDate = dateStr;
+  renderCalendar();
+}
+
+function renderSelectedDate() {
+  const [y,m,d] = selectedDate.split('-');
+  const label = `${d} de ${MONTHS[parseInt(m)-1]} de ${y}`;
+  document.getElementById('selected-date-title').textContent = label;
+  const dayTasks = tasks.filter(t => t.date === selectedDate);
+  const el = document.getElementById('cal-task-list');
+  el.innerHTML = dayTasks.length
+    ? dayTasks.map(t => `<div class="task-item ${t.done?'done':''}">
+        <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id});renderCalendar()"></div>
+        <div class="task-text">${t.title}</div>
+        <button class="task-del" onclick="deleteTask(${t.id});renderCalendar()">✕</button>
+      </div>`).join('')
+    : '<div class="empty-state">Sem tarefas neste dia</div>';
+}
+
+async function addCalTask() {
+  const input = document.getElementById('new-cal-task');
+  const title = input.value.trim();
+  if (!title) return;
+  const task = { id: Date.now(), title, date: selectedDate, priority: 'media', note: '', done: false, createdAt: new Date().toISOString() };
+  const res = await apiPost('/api/tasks', task);
+  if (res) tasks = res;
+  else { tasks.push(task); lsSet('tasks', tasks); }
+  input.value = '';
+  renderCalendar(); renderDashboard();
+  toast('✅ Tarefa adicionada!');
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function goToToday() {
+  calYear = new Date().getFullYear();
+  calMonth = new Date().getMonth();
+  selectedDate = todayStr();
+  renderCalendar();
+}
+
+// ============================================================
+//  POMODORO
+// ============================================================
+let pomoConfig = { foco: 25, pausa: 5, longa: 15, sessions: 4 };
+let pomoState = { mode: 'foco', running: false, timeLeft: 0, totalTime: 0, sessionsDone: 0, interval: null };
+
+function updatePomoConfig() {
+  pomoConfig.foco = parseInt(document.getElementById('cfg-foco').value) || 25;
+  pomoConfig.pausa = parseInt(document.getElementById('cfg-pausa').value) || 5;
+  pomoConfig.longa = parseInt(document.getElementById('cfg-longa').value) || 15;
+  pomoConfig.sessions = parseInt(document.getElementById('cfg-sessions').value) || 4;
+  if (!pomoState.running) { setMode(pomoState.mode); }
+  lsSet('pomo_config', pomoConfig);
+}
+
+function setMode(mode) {
+  if (pomoState.running) return;
+  pomoState.mode = mode;
+  const mins = mode === 'foco' ? pomoConfig.foco : mode === 'pausa' ? pomoConfig.pausa : pomoConfig.longa;
+  pomoState.timeLeft = mins * 60;
+  pomoState.totalTime = mins * 60;
+  updatePomoDisplay();
+  document.querySelectorAll('.pomo-mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + (mode === 'longa' ? 'longa' : mode === 'pausa' ? 'pausa' : 'foco')).classList.add('active');
+  document.getElementById('pomo-mode-label').textContent = mode === 'foco' ? 'FOCO' : mode === 'pausa' ? 'PAUSA CURTA' : 'PAUSA LONGA';
+  const ring = document.getElementById('pomo-ring-prog');
+  const C = 2 * Math.PI * 88;
+  ring.style.stroke = mode === 'foco' ? 'var(--accent)' : mode === 'pausa' ? 'var(--accent3)' : 'var(--accent4)';
+  ring.style.strokeDashoffset = '0';
+}
+
+function updatePomoDisplay() {
+  const m = Math.floor(pomoState.timeLeft / 60);
+  const s = pomoState.timeLeft % 60;
+  document.getElementById('pomo-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const C = 2 * Math.PI * 88;
+  const frac = pomoState.timeLeft / pomoState.totalTime;
+  document.getElementById('pomo-ring-prog').style.strokeDashoffset = String(C * (1 - frac));
+  renderPomoDots();
+}
+
+function renderPomoDots() {
+  const dots = document.getElementById('pomo-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < pomoConfig.sessions; i++) {
+    dots.innerHTML += `<div class="pomo-dot ${i < pomoState.sessionsDone ? 'done' : ''}"></div>`;
+  }
+}
+
+function togglePomo() {
+  if (pomoState.running) {
+    clearInterval(pomoState.interval);
+    pomoState.running = false;
+    document.getElementById('pomo-play-btn').textContent = '▶';
+  } else {
+    pomoState.running = true;
+    document.getElementById('pomo-play-btn').textContent = '⏸';
+    pomoState.interval = setInterval(() => {
+      pomoState.timeLeft--;
+      updatePomoDisplay();
+      if (pomoState.timeLeft <= 0) { pomoDone(); }
+    }, 1000);
+  }
+}
+
+function pomoDone() {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  document.getElementById('pomo-play-btn').textContent = '▶';
+  if (pomoState.mode === 'foco') {
+    pomoState.sessionsDone++;
+    const task = document.getElementById('pomo-task').value || 'Sessão de foco';
+    const session = {
+      id: Date.now(), task, duration: pomoConfig.foco, date: todayStr(),
+      time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+      timestamp: new Date().toISOString()
+    };
+    let sessions = lsGet('pomo_sessions', []);
+    sessions.push(session);
+    lsSet('pomo_sessions', sessions);
+    apiPost('/api/sessions', session);
+    renderSessionLog(); renderDashboard();
+    toast(`🍅 Sessão concluída! +${pomoConfig.foco} min`);
+    // Auto next
+    if (pomoState.sessionsDone >= pomoConfig.sessions) {
+      pomoState.sessionsDone = 0; setMode('longa');
+    } else { setMode('pausa'); }
+  } else {
+    toast('⏰ Pausa terminada! Hora de focar.');
+    setMode('foco');
+  }
+  // Browser notification
+  if (Notification.permission === 'granted') {
+    new Notification('EstudaVitor', { body: pomoState.mode === 'foco' ? 'Sessão concluída!' : 'Pausa terminada!', icon: '' });
+  }
+}
+
+function resetPomo() {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  document.getElementById('pomo-play-btn').textContent = '▶';
+  setMode(pomoState.mode);
+}
+
+function skipPomo() { pomoDone(); }
+
+function renderSessionLog() {
+  const sessions = lsGet('pomo_sessions', []);
+  const today = sessions.filter(s => s.date === todayStr()).reverse();
+  const el = document.getElementById('session-log');
+  el.innerHTML = today.length
+    ? today.map(s => `<div class="session-entry">
+        <span class="s-task">${s.task}</span>
+        <span class="s-time">${s.time}</span>
+        <span class="s-dur">${s.duration}m</span>
+      </div>`).join('')
+    : '<div class="empty-state">Nenhuma sessão hoje</div>';
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const today = todayStr();
+  const todayTasks = tasks.filter(t => t.date === today);
+  const doneTasks = todayTasks.filter(t => t.done);
+  document.getElementById('stat-today-tasks').textContent = todayTasks.length;
+  document.getElementById('stat-today-done').textContent = `${doneTasks.length} concluídas`;
+  const sessions = lsGet('pomo_sessions', []);
+  const todaySessions = sessions.filter(s => s.date === today);
+  const totalMin = todaySessions.reduce((a,s) => a + s.duration, 0);
+  document.getElementById('stat-pomos').textContent = todaySessions.length;
+  document.getElementById('stat-pomo-time').textContent = `${totalMin} min focados`;
+  // Study days this month
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthSessions = sessions.filter(s => s.date.startsWith(monthStr));
+  const studyDays = new Set(monthSessions.map(s => s.date)).size;
+  const totalHours = (monthSessions.reduce((a,s) => a + s.duration, 0) / 60).toFixed(1);
+  document.getElementById('stat-study-days').textContent = studyDays;
+  document.getElementById('stat-study-hours').textContent = `${totalHours}h totais`;
+  // Pending
+  document.getElementById('stat-pending').textContent = tasks.filter(t => !t.done).length;
+  // Today tasks in dash
+  document.getElementById('dash-today-tasks').innerHTML = todayTasks.length
+    ? todayTasks.map(t => `<div class="task-item ${t.done?'done':''}" style="margin-bottom:6px">
+        <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id});renderDashboard()"></div>
+        <div class="task-text">${t.title}</div>
+      </div>`).join('')
+    : '<div class="empty-state">Nenhuma tarefa para hoje</div>';
+  // Recent pomos in dash
+  const recentPomos = [...todaySessions].reverse().slice(0, 4);
+  document.getElementById('dash-recent-pomos').innerHTML = recentPomos.length
+    ? recentPomos.map(s => `<div class="session-entry">
+        <span class="s-task">${s.task}</span>
+        <span class="s-dur">🍅 ${s.duration}m</span>
+      </div>`).join('')
+    : '<div class="empty-state">Nenhuma sessão hoje</div>';
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function renderExport() {
+  const sessions = lsGet('pomo_sessions', []);
+  // Group by month
+  const byMonth = {};
+  sessions.forEach(s => {
+    const m = s.date.slice(0, 7);
+    if (!byMonth[m]) byMonth[m] = [];
+    byMonth[m].push(s);
+  });
+  // Also count task-months
+  tasks.forEach(t => {
+    const m = t.date.slice(0, 7);
+    if (!byMonth[m]) byMonth[m] = [];
+  });
+  const months = Object.keys(byMonth).sort().reverse();
+  if (!months.length) {
+    document.getElementById('export-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1;padding:48px">Nenhum dado ainda. Comece a usar o Pomodoro!</div>';
+    return;
+  }
+  const [curY, curM] = [new Date().getFullYear(), new Date().getMonth()+1];
+  document.getElementById('export-grid').innerHTML = months.map(m => {
+    const [y, mo] = m.split('-').map(Number);
+    const monthName = `${MONTHS[mo-1]} ${y}`;
+    const ss = byMonth[m] || [];
+    const studyDays = new Set(ss.map(s => s.date)).size;
+    const totalMin = ss.reduce((a,s) => a + s.duration, 0);
+    const totalH = (totalMin / 60).toFixed(1);
+    const taskCount = tasks.filter(t => t.date.startsWith(m)).length;
+    const doneCount = tasks.filter(t => t.date.startsWith(m) && t.done).length;
+    const daysInMonth = new Date(y, mo, 0).getDate();
+    const pct = Math.round((studyDays / daysInMonth) * 100);
+    const isCurrentMonth = (y === curY && mo === curM);
+    return `<div class="month-card">
+      <div class="month-card-header">
+        <div>
+          <div class="month-card-name">${monthName}</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">${isCurrentMonth?'Mês atual':''}</div>
+        </div>
+        <span style="font-size:1.5rem">📅</span>
+      </div>
+      <div class="month-stats">
+        <div class="month-stat"><div class="month-stat-val">${studyDays}</div><div class="month-stat-key">Dias estudados</div></div>
+        <div class="month-stat"><div class="month-stat-val">${totalH}h</div><div class="month-stat-key">Horas focadas</div></div>
+        <div class="month-stat"><div class="month-stat-val">${ss.length}</div><div class="month-stat-key">Pomodoros</div></div>
+        <div class="month-stat"><div class="month-stat-val">${doneCount}/${taskCount}</div><div class="month-stat-key">Tarefas</div></div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px">${pct}% dos dias do mês</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="export-btn-row">
+        <button class="btn btn-ghost" onclick="exportMonthCSV('${m}')" style="font-size:0.8rem">📥 CSV</button>
+        <button class="btn btn-ghost" onclick="exportMonthTXT('${m}')" style="font-size:0.8rem">📄 Relatório</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportMonthCSV(month) {
+  const sessions = lsGet('pomo_sessions', []).filter(s => s.date.startsWith(month));
+  const rows = [['Data','Hora','Tarefa/Estudo','Duração (min)']];
+  sessions.forEach(s => rows.push([s.date, s.time, s.task, s.duration]));
+  downloadCSV(rows, `estudavitor_${month}.csv`);
+  toast('📥 CSV exportado!');
+}
+
+function exportAllCSV() {
+  const sessions = lsGet('pomo_sessions', []);
+  const rows = [['Data','Hora','Tarefa/Estudo','Duração (min)']];
+  sessions.forEach(s => rows.push([s.date, s.time||'', s.task, s.duration]));
+  downloadCSV(rows, `estudavitor_completo.csv`);
+  toast('📥 CSV completo exportado!');
+}
+
+function exportMonthTXT(month) {
+  const [y,mo] = month.split('-').map(Number);
+  const monthName = `${MONTHS[mo-1]} ${y}`;
+  const sessions = lsGet('pomo_sessions', []).filter(s => s.date.startsWith(month));
+  const studyDays = new Set(sessions.map(s => s.date)).size;
+  const totalMin = sessions.reduce((a,s) => a+s.duration, 0);
+  const totalH = (totalMin/60).toFixed(1);
+  const tasksDone = tasks.filter(t => t.date.startsWith(month) && t.done).length;
+  const tasksTotal = tasks.filter(t => t.date.startsWith(month)).length;
+  let txt = `RELATÓRIO - ${monthName}\n${'='.repeat(40)}\n\n`;
+  txt += `📅 Dias estudados: ${studyDays}\n`;
+  txt += `⏱️  Total de horas: ${totalH}h (${totalMin} min)\n`;
+  txt += `🍅 Sessões Pomodoro: ${sessions.length}\n`;
+  txt += `✅ Tarefas concluídas: ${tasksDone} de ${tasksTotal}\n\n`;
+  txt += `SESSÕES DETALHADAS\n${'-'.repeat(40)}\n`;
+  sessions.forEach(s => { txt += `${s.date} ${s.time||''} | ${s.task} | ${s.duration}min\n`; });
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `relatorio_${month}.txt`; a.click();
+  toast('📄 Relatório exportado!');
+}
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = filename; a.click();
+}
+
+// ============================================================
+//  CONFIG & GCAL
+// ============================================================
+async function renderConfig() {
+  const accounts = await apiGet('/api/google/accounts') || [];
+  const list = document.getElementById('google-accounts-list');
+  if (accounts.length === 0) {
+    list.innerHTML = '<div class="empty-state">Nenhuma conta conectada.</div>';
+    return;
+  }
+  list.innerHTML = accounts.map(a => `
+    <div class="session-entry" style="justify-content:flex-start; gap:12px; border:1px solid var(--border)">
+      <img src="${a.picture || ''}" alt="" style="width:32px; height:32px; border-radius:50%; background:var(--bg)"/>
+      <div style="flex:1">
+        <div style="font-size:0.9rem;font-weight:600">${a.name || 'Usuário'}</div>
+        <div style="font-size:0.75rem;color:var(--muted)">${a.email}</div>
+      </div>
+      <button class="btn btn-danger" style="padding:4px 8px;font-size:0.75rem" onclick="unlinkAccount('${window.encodeURIComponent(a.email)}')">Desvincular</button>
+    </div>
+  `).join('');
+}
+
+async function unlinkAccount(email) {
+  if(!confirm('Desvincular esta conta?')) return;
+  await apiDel('/api/google/accounts/' + email);
+  renderConfig();
+  toast('Conta desvinculada');
+}
+
+async function syncGoogleCalendar() {
+  toast('🔄 Sincronizando com o Google...');
+  const res = await apiPost('/api/google/sync', {});
+  if (res && res.success) {
+    tasks = res.tasks || tasks;
+    renderTasks(); renderCalendar(); renderDashboard();
+    toast(`✅ Sincronizado! ${res.changes} alterações.`);
+  } else if(res && res.error === 'No accounts linked') {
+    toast('⚠️ Conecte uma conta primeiro');
+    showTab('config');
+  } else {
+    toast('❌ Erro na sincronização');
+  }
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+async function init() {
+  // Notifications
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  // Load config
+  const cfg = lsGet('pomo_config', null);
+  if (cfg) {
+    pomoConfig = cfg;
+    document.getElementById('cfg-foco').value = cfg.foco;
+    document.getElementById('cfg-pausa').value = cfg.pausa;
+    document.getElementById('cfg-longa').value = cfg.longa;
+    document.getElementById('cfg-sessions').value = cfg.sessions;
+  }
+  // Load tasks
+  await loadTasks();
+  // Init pomodoro
+  setMode('foco');
+  renderPomoDots();
+  renderSessionLog();
+  // Set calendar date
+  document.getElementById('task-date').value = todayStr();
+  // Render
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('tab') === 'config') {
+    showTab('config');
+  } else {
+    renderDashboard();
+  }
+  // Sync from server periodically
+  setInterval(async () => {
+    const data = await apiGet('/api/tasks');
+    if (data) { tasks = data; renderTasks(); renderDashboard(); }
+    const sessions = await apiGet('/api/sessions');
+    if (sessions) { lsSet('pomo_sessions', sessions); }
+  }, 30000);
+
+  // Auto-sync Google Calendar in background (every 5 minutes)
+  setInterval(async () => {
+    const accounts = await apiGet('/api/google/accounts');
+    if (accounts && accounts.length > 0) {
+      const res = await apiPost('/api/google/sync', {});
+      if (res && res.success && res.changes > 0) {
+        tasks = res.tasks || tasks;
+        renderTasks(); renderCalendar(); renderDashboard();
+        toast(`✅ Google Sync: ${res.changes} itens atualizados!`);
+      }
+    }
+  }, 300000);
+}
+
+init();
+</script>
+</body>
+</html>
