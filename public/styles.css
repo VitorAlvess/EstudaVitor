@@ -61,6 +61,8 @@ main { flex: 1; padding: 28px; max-width: 1200px; margin: 0 auto; width: 100%; }
 .stat-label { font-size: 0.8rem; color: var(--muted); }
 .dashboard-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 700px) { .dashboard-bottom { grid-template-columns: 1fr; } }
+.home-gif-edit-btn { opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(-3px); }
+.card:hover .home-gif-edit-btn { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
 /* ===== CALENDAR ===== */
 .calendar-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
@@ -93,8 +95,13 @@ main { flex: 1; padding: 28px; max-width: 1200px; margin: 0 auto; width: 100%; }
 .cal-mini-task.alta { background: rgba(255,107,107,0.15); color: var(--accent2); }
 .cal-mini-task.media { background: rgba(255,209,102,0.15); color: var(--accent4); }
 .cal-mini-task.baixa { background: rgba(67,233,123,0.15); color: var(--accent3); }
-.cal-mini-task.done { opacity: 0.4; text-decoration: line-through; }
+.cal-mini-task.google { opacity: 0.5; border: 1px solid rgba(255,255,255,0.1); border-left: 2px solid var(--muted); }
+.cal-mini-task.manual { border-left: 3px solid var(--accent); font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.cal-mini-task.done { opacity: 0.3 !important; text-decoration: line-through; }
 .cal-mini-task.more { text-align: center; color: var(--muted); background: none; font-weight: 600; padding: 0; }
+
+.cal-section-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 12px 0 6px; display: flex; align-items: center; gap: 6px; }
+.cal-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
 
 /* Side panel tasks */
 .side-panel { display: flex; flex-direction: column; gap: 16px; }
@@ -130,24 +137,57 @@ main { flex: 1; padding: 28px; max-width: 1200px; margin: 0 auto; width: 100%; }
 /* ===== POMODORO ===== */
 .pomodoro-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px; margin: 0 auto; }
 @media (max-width: 700px) { .pomodoro-layout { grid-template-columns: 1fr; } }
-.pomo-center { text-align: center; }
+.pomo-center { 
+  text-align: center; 
+  background: rgba(255, 255, 255, 0.03); 
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  padding: 40px 20px;
+}
 .pomo-mode-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
 .pomo-mode-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--muted); cursor: pointer; font-size: 0.82rem; transition: all 0.15s; }
 .pomo-mode-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 .pomo-ring-wrap { position: relative; display: inline-block; margin-bottom: 24px; }
 .pomo-ring { transform: rotate(-90deg); }
 .pomo-ring-bg { fill: none; stroke: var(--bg3); stroke-width: 8; }
-.pomo-ring-progress { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.pomo-ring-progress { 
+  fill: none; 
+  stroke: var(--accent); 
+  stroke-width: 10; 
+  stroke-linecap: round; 
+  transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+.pomo-ring-wrap.running .pomo-ring-progress {
+  animation: pomo-glow 2s infinite ease-in-out;
+}
+@keyframes pomo-glow {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px var(--accent)); }
+  50% { opacity: 0.8; filter: drop-shadow(0 0 15px var(--accent)); }
+}
 .pomo-time {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800;
+  font-family: 'Outfit', 'Syne', sans-serif; font-size: 3.5rem; font-weight: 900;
+  letter-spacing: -2px; color: var(--text);
+  text-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 .pomo-label { font-size: 0.75rem; color: var(--muted); margin-top: -8px; text-transform: uppercase; letter-spacing: 2px; }
 .pomo-controls { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
-.pomo-btn { width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.2rem; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
-.pomo-btn-main { background: var(--accent); color: white; width: 64px; height: 64px; font-size: 1.5rem; }
-.pomo-btn-main:hover { opacity: 0.85; transform: scale(1.05); }
-.pomo-btn-sec { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.pomo-btn { 
+  width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; 
+  font-size: 1.2rem; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+  display: flex; align-items: center; justify-content: center; 
+}
+.pomo-btn-main { 
+  background: linear-gradient(135deg, var(--accent), #8a84ff); 
+  color: white; width: 68px; height: 68px; font-size: 1.6rem;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+}
+.pomo-btn-main:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6); }
+.pomo-btn-sec { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
+.pomo-btn-sec:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
 .pomo-sessions { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
 .pomo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); transition: all 0.3s; }
 .pomo-dot.done { background: var(--accent); border-color: var(--accent); }
@@ -182,6 +222,30 @@ select option { background: var(--bg2); }
 .priority-badge.alta { background: rgba(255,107,107,0.15); color: var(--accent2); }
 .priority-badge.media { background: rgba(255,209,102,0.15); color: var(--accent4); }
 .priority-badge.baixa { background: rgba(67,233,123,0.15); color: var(--accent3); }
+
+/* ===== PLANNER ===== */
+.notion-board { display: flex; flex-direction: column; gap: 32px; min-width: 1000px; padding-bottom: 24px; margin-top: 10px; }
+.notion-days-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; margin-bottom: 12px; }
+.notion-day-title { font-size: 0.85rem; font-weight: 700; color: var(--accent); background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
+.notion-day-count { color: white; background: var(--accent); padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 800; }
+.notion-shift-row { display: flex; flex-direction: column; gap: 16px; position: relative; }
+.notion-shift-title { font-size: 1.1rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 10px; margin-left: 4px; font-family: 'Syne', sans-serif; opacity: 0.95; }
+.notion-shift-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px; }
+.notion-cell { display: flex; flex-direction: column; gap: 10px; min-height: 100px; padding: 12px; background: rgba(255,255,255,0.015); border-radius: 14px; border: 1px dashed rgba(255,255,255,0.06); transition: all 0.25s; }
+.notion-cell:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.15); }
+.notion-card { background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; cursor: Grab; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 16px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
+.notion-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%); pointer-events: none; }
+.notion-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 24px rgba(108,99,255,0.2); z-index: 2; }
+.notion-card:active { cursor: Grabbing; transform: scale(0.98); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.notion-card-title { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.notion-card.done { opacity: 0.5; filter: grayscale(80%); border-left-color: var(--border); transform: none; box-shadow: none; }
+.notion-card.done .notion-card-title { text-decoration: line-through; color: var(--muted); }
+.notion-card.done:hover { transform: translateY(-1px); border-color: var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.notion-add-btn { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); font-size: 0.85rem; font-weight: 600; padding: 10px; border-radius: 10px; cursor: pointer; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.15); font-family: 'DM Sans', sans-serif; transition: all 0.2s; width: 100%; }
+.notion-add-btn:hover { background: rgba(108,99,255,0.1); color: var(--accent); border-color: var(--accent); transform: scale(1.02); }
+.notion-input-card { background: var(--bg2); border: 1px solid var(--accent); border-radius: 10px; padding: 12px; box-shadow: 0 8px 24px rgba(108,99,255,0.25); animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.notion-input-card input { width: 100%; border: none; background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; outline: none; }
+@keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
 /* ===== EXPORT ===== */
 .export-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }

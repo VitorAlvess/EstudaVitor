@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EstudaVitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/png" href="/img/logo.png?v=2" />
 
@@ -18,7 +18,9 @@
       <button class="active" onclick="showTab('dashboard')">🏠 Início</button>
       <button onclick="showTab('calendar')">📅 Calendário</button>
       <button onclick="showTab('tasks')">✅ Tarefas</button>
+      <button onclick="showTab('planner')">📝 Planner</button>
       <button onclick="showTab('pomodoro')">🍅 Pomodoro</button>
+      <button onclick="showTab('pomocalendar')">🍅 Cal. Pomodoro</button>
       <button onclick="showTab('export')">📊 Relatórios</button>
       <button onclick="showTab('config')">⚙️ Configs</button>
     </nav>
@@ -64,6 +66,19 @@
         <div class="card">
           <div class="card-title">Últimas sessões Pomodoro</div>
           <div id="dash-recent-pomos"><div class="empty-state">Nenhuma sessão ainda</div></div>
+        </div>
+      </div>
+
+      <div class="dashboard-custom-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
+        <div class="card" style="display: flex; flex-direction: column;">
+          <div class="card-title">Anotações Livres do Dia</div>
+          <textarea id="home-notes" placeholder="Escreva algo inspirador ou suas notas rápidas aqui... (salvo automaticamente)" style="width: 100%; flex: 1; min-height: 150px; background: transparent; border: none; color: var(--text); font-family: 'DM Sans', sans-serif; resize: none; outline: none; font-size: 0.95rem; line-height: 1.5;" oninput="saveHomeSettings()"></textarea>
+        </div>
+        <div class="card" style="display: flex; flex-direction: column; padding: 0; position: relative; overflow: hidden; align-items: center; justify-content: center; min-height: 200px;">
+          <button class="home-gif-edit-btn" onclick="changeHomeGif()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); border: none; color: white; cursor: pointer; font-size: 0.9rem; padding: 8px; border-radius: 8px; z-index: 10;" title="Mudar Animação" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='rgba(0,0,0,0.6)'">✏️</button>
+          <div id="home-gif-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+            <img src="https://i.pinimg.com/originals/a0/78/3e/a0783e74bb3aa8d4eecb049d1df5d43e.gif" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
         </div>
       </div>
     </div>
@@ -192,6 +207,32 @@
       </div>
     </div>
 
+    <!-- POMOCALENDAR -->
+    <div id="tab-pomocalendar" class="tab">
+      <div class="section-header">
+        <div class="section-title">Calendário Pomodoro</div>
+      </div>
+      <div class="calendar-layout">
+        <div class="card">
+          <div class="cal-header">
+            <div class="cal-nav">
+              <button onclick="changePomoMonth(-1)">‹</button>
+              <div class="cal-month" id="pomo-cal-month-label"></div>
+              <button onclick="changePomoMonth(1)">›</button>
+            </div>
+            <button class="btn btn-ghost" onclick="goToPomoToday()" style="font-size:0.8rem;padding:6px 12px">Hoje</button>
+          </div>
+          <div class="cal-grid" id="pomo-cal-grid"></div>
+        </div>
+        <div class="side-panel">
+          <div class="card">
+            <div class="selected-date-title" id="pomo-selected-date-title">Selecione um dia</div>
+            <div id="pomo-cal-session-list"><div class="empty-state">Selecione um dia no calendário</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- EXPORT -->
     <div id="tab-export" class="tab">
       <div class="section-header">
@@ -223,6 +264,27 @@
         </div>
       </div>
     </div>
+    
+    <!-- PLANNER -->
+    <div id="tab-planner" class="tab" style="max-width: 100%; overflow-x: auto;">
+      <div class="section-header" style="margin-bottom: 24px;">
+        <div class="section-title">Planner e Metas</div>
+        <button class="btn btn-ghost" style="color:var(--danger); border-color:var(--danger);" onclick="clearPlanner()">🧹 Limpar Tudo</button>
+      </div>
+      <div id="planner-grid-container">
+        <!-- Renderizado via JS -->
+      </div>
+      <div class="card" style="margin-top: 24px; max-width: 600px;">
+        <div class="card-title">Metas da Semana</div>
+        <div class="task-input-row" style="margin-bottom: 16px;">
+          <input type="text" id="new-planner-semana-geral" placeholder="Nova meta..." onkeydown="if(event.key==='Enter')addPlannerTask('semana', 'geral')" />
+          <button class="btn btn-primary" onclick="addPlannerTask('semana', 'geral')">+</button>
+        </div>
+        <div id="weekly-todo-list" style="display: flex; flex-direction: column; gap: 8px; min-height: 50px;" ondragover="event.preventDefault()" ondrop="dropPlannerTask(event, 'semana', 'geral')" onmouseenter="hoverContext={type:'planner-cell', day:'semana', shift:'geral'}" onmouseleave="hoverContext={type:null}">
+          <!-- JS -->
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -233,6 +295,7 @@
 //  STATE & STORAGE
 // ============================================================
 const API = '';  // same-origin
+const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
 async function apiGet(path) {
   try { const r = await fetch(API + path); return await r.json(); } catch { return null; }
@@ -240,6 +303,12 @@ async function apiGet(path) {
 async function apiPost(path, body) {
   try {
     const r = await fetch(API + path, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    return await r.json();
+  } catch { return null; }
+}
+async function apiPut(path, body) {
+  try {
+    const r = await fetch(API + path, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     return await r.json();
   } catch { return null; }
 }
@@ -281,12 +350,14 @@ function showTab(name) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   const btns = document.querySelectorAll('nav button');
-  const map = {dashboard:0, calendar:1, tasks:2, pomodoro:3, export:4, config:5};
+  const map = {dashboard:0, calendar:1, tasks:2, planner:3, pomodoro:4, pomocalendar:5, export:6, config:7};
   if(btns[map[name]]) btns[map[name]].classList.add('active');
   if (name === 'dashboard') renderDashboard();
   if (name === 'config') renderConfig();
   if (name === 'calendar') renderCalendar();
   if (name === 'tasks') renderTasks();
+  if (name === 'planner') renderPlanner();
+  if (name === 'pomocalendar') renderPomoCalendar();
   if (name === 'export') renderExport();
 }
 
@@ -301,17 +372,25 @@ async function loadTasks() {
   else tasks = lsGet('tasks', []);
 }
 
+async function loadSessions() {
+  const data = await apiGet('/api/sessions');
+  if (data) lsSet('pomo_sessions', data);
+}
+
 async function saveTasks() {
   lsSet('tasks', tasks);
   // server sync handled per-operation
 }
 
-function todayStr() { return new Date().toISOString().split('T')[0]; }
+function todayStr() { 
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
 
 async function addTask() {
   const title = document.getElementById('task-title').value.trim();
   if (!title) { toast('Digite o título da tarefa'); return; }
-  const date = document.getElementById('task-date').value || todayStr();
+  const date = document.getElementById('task-date').value;
   const priority = document.getElementById('task-priority').value;
   const note = document.getElementById('task-note').value.trim();
   const task = { id: Date.now(), title, date, priority, note, done: false, createdAt: new Date().toISOString() };
@@ -342,34 +421,52 @@ async function deleteTask(id) {
   toast('🗑️ Tarefa removida');
 }
 
+async function editTask(id) {
+  const t = tasks.find(task => task.id === id);
+  if (!t) return;
+  const newTitle = prompt('Editar tarefa:', t.title);
+  if (newTitle && newTitle.trim() !== '' && newTitle.trim() !== t.title) {
+    t.title = newTitle.trim();
+    renderTasks(); renderCalendar(); renderDashboard();
+    const res = await apiPut('/api/tasks/' + id, { title: t.title });
+    if (res) tasks = res;
+    else lsSet('tasks', tasks);
+  }
+}
+
 function renderTasks() {
-  const pending = tasks.filter(t => !t.done).sort((a,b) => a.date.localeCompare(b.date));
-  const all = [...tasks].sort((a,b) => b.date.localeCompare(a.date));
+  const manualTasks = tasks.filter(t => !t.isGoogleOnly);
+  const pending = manualTasks.filter(t => !t.done).sort((a,b) => (a.date||'9999').localeCompare(b.date||'9999'));
+  const all = [...manualTasks].sort((a,b) => (b.date||'0000').localeCompare(a.date||'0000'));
   document.getElementById('task-pending-list').innerHTML = pending.length
     ? pending.map(t => taskHTML(t)).join('')
     : '<div class="empty-state">Nenhuma tarefa pendente 🎉</div>';
   document.getElementById('task-all-list').innerHTML = all.length
     ? all.map(t => taskHTML(t)).join('')
     : '<div class="empty-state">Nenhuma tarefa cadastrada</div>';
-  // Set default date to today
-  if (!document.getElementById('task-date').value)
-    document.getElementById('task-date').value = todayStr();
 }
 
 function taskHTML(t) {
-  const isLate = !t.done && t.date < todayStr();
-  return `<div class="task-item ${t.done?'done':''}" style="${isLate?'border-color:rgba(255,107,107,0.4)':''}">
+  const isLate = !t.done && t.date && t.date < todayStr();
+  const editButtons = t.isGoogleOnly ? '' : `
+    <span style="font-size: 0.8rem; cursor:pointer;" onclick="editTask(${t.id})" title="Editar">✏️</span> 
+    <span style="font-size: 0.8rem; cursor:pointer;" onclick="deleteTask(${t.id})" title="Excluir">✕</span>`;
+  
+  return `<div class="task-item ${t.done?'done':''}" style="${isLate?'border-color:rgba(255,107,107,0.4)':''}" onmouseenter="hoverContext={type:'task',id:${t.id}}" onmouseleave="hoverContext={type:null}">
     <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div>
     <div style="flex:1">
-      <div class="task-text">${t.title}</div>
+      <div class="task-text">${t.title} ${editButtons}</div>
       <div style="font-size:0.73rem;color:var(--muted);margin-top:2px">
-        ${t.date} ${isLate?'⚠️ atrasada':''}
+        ${t.date ? t.date : '<span style="opacity:0.6;">Sem data</span>'} ${isLate?'⚠️ atrasada':''}
         ${t.note ? '· '+t.note : ''}
         ${t.googleEventId ? ' 🔵 GCalendar' : ''}
       </div>
     </div>
     <span class="priority-badge ${t.priority}">${t.priority}</span>
-    <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+    ${t.isGoogleOnly ? '' : `
+    <button class="task-del" onclick="editTask(${t.id})" title="Editar" style="margin-right: -4px;">✏️</button>
+    <button class="task-del" onclick="deleteTask(${t.id})" title="Excluir">✕</button>
+    `}
   </div>`;
 }
 
@@ -414,10 +511,12 @@ function renderCalendar() {
     
     let tasksHTML = '';
     if (hasTasks) {
-      const showCount = 3;
-      const toShow = dayTasks.slice(0, showCount);
+      const showCount = 4;
+      // Ordenar: Manuais primeiro
+      const sortedDayTasks = [...dayTasks].sort((a,b) => (a.isGoogleOnly ? 1 : -1));
+      const toShow = sortedDayTasks.slice(0, showCount);
       tasksHTML = '<div class="cal-day-tasks">' + 
-        toShow.map(t => `<div class="cal-mini-task ${t.done?'done':''} ${t.priority || 'media'}" title="${t.title}">${t.title}</div>`).join('') + 
+        toShow.map(t => `<div class="cal-mini-task ${t.done?'done':''} ${t.isGoogleOnly?'google':'manual'} ${t.priority || 'media'}" title="${t.title}">${t.isGoogleOnly?'':'• '}${t.title}</div>`).join('') + 
         (dayTasks.length > showCount ? `<div class="cal-mini-task more">+${dayTasks.length - showCount}</div>` : '') + 
         '</div>';
     }
@@ -436,15 +535,37 @@ function renderSelectedDate() {
   const [y,m,d] = selectedDate.split('-');
   const label = `${d} de ${MONTHS[parseInt(m)-1]} de ${y}`;
   document.getElementById('selected-date-title').textContent = label;
+  
   const dayTasks = tasks.filter(t => t.date === selectedDate);
+  const manual = dayTasks.filter(t => !t.isGoogleOnly);
+  const google = dayTasks.filter(t => t.isGoogleOnly);
+  
   const el = document.getElementById('cal-task-list');
-  el.innerHTML = dayTasks.length
-    ? dayTasks.map(t => `<div class="task-item ${t.done?'done':''}">
+  
+  let html = '';
+  
+  if (manual.length > 0) {
+    html += `<div class="cal-section-title">Minhas Tarefas</div>`;
+    html += manual.map(t => `<div class="task-item ${t.done?'done':''}">
         <div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${t.id});renderCalendar()"></div>
         <div class="task-text">${t.title}</div>
         <button class="task-del" onclick="deleteTask(${t.id});renderCalendar()">✕</button>
-      </div>`).join('')
-    : '<div class="empty-state">Sem tarefas neste dia</div>';
+      </div>`).join('');
+  }
+  
+  if (google.length > 0) {
+    html += `<div class="cal-section-title">Agenda Google</div>`;
+    html += google.map(t => `<div class="task-item ${t.done?'done':''}" style="opacity:0.7">
+        <div class="task-check ${t.done?'checked':''}" style="cursor:default"></div>
+        <div class="task-text">${t.title} <small style="display:block; font-size:0.6rem; opacity:0.6">🔵 Evento Externo</small></div>
+      </div>`).join('');
+  }
+  
+  if (dayTasks.length === 0) {
+    html = '<div class="empty-state">Sem tarefas neste dia</div>';
+  }
+  
+  el.innerHTML = html;
 }
 
 async function addCalTask() {
@@ -475,10 +596,105 @@ function goToToday() {
 }
 
 // ============================================================
+//  POMODORO CALENDAR
+// ============================================================
+let pomoCalYear = new Date().getFullYear();
+let pomoCalMonth = new Date().getMonth();
+let pomoSelectedDate = todayStr();
+
+function renderPomoCalendar() {
+  document.getElementById('pomo-cal-month-label').textContent = `${MONTHS[pomoCalMonth]} ${pomoCalYear}`;
+  const grid = document.getElementById('pomo-cal-grid');
+  grid.innerHTML = DAYS.map(d => `<div class="cal-day-name">${d}</div>`).join('');
+  const first = new Date(pomoCalYear, pomoCalMonth, 1).getDay();
+  const days = new Date(pomoCalYear, pomoCalMonth+1, 0).getDate();
+  const prevDays = new Date(pomoCalYear, pomoCalMonth, 0).getDate();
+  const today = todayStr();
+  
+  const sessions = lsGet('pomo_sessions', []);
+
+  for (let i = 0; i < first; i++) {
+    const d = prevDays - first + 1 + i;
+    grid.innerHTML += `<div class="cal-day other-month">${d}</div>`;
+  }
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${pomoCalYear}-${String(pomoCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const daySessions = sessions.filter(s => s.date === dateStr);
+    const hasSessions = daySessions.length > 0;
+    const isToday = dateStr === today;
+    const isSel = dateStr === pomoSelectedDate;
+    
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (isSel) cls += ' selected';
+    if (hasSessions && !isToday && !isSel) cls += ' studied';
+    
+    let contentHTML = '';
+    if (hasSessions) {
+      const totalMin = daySessions.reduce((acc, s) => acc + s.duration, 0);
+      const hours = Math.floor(totalMin / 60);
+      const mins = totalMin % 60;
+      const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+      contentHTML = `<div style="font-size: 0.75rem; color: var(--accent); font-weight: bold; margin-top: 4px;">${timeStr}</div>`;
+      contentHTML += `<div style="font-size: 0.65rem; color: var(--muted);">${daySessions.length} sessões</div>`;
+    }
+
+    grid.innerHTML += `<div class="${cls}" onclick="selectPomoDate('${dateStr}')"><div class="cal-day-num">${d}</div>${contentHTML}</div>`;
+  }
+  renderPomoSelectedDate();
+}
+
+function selectPomoDate(dateStr) {
+  pomoSelectedDate = dateStr;
+  renderPomoCalendar();
+}
+
+function renderPomoSelectedDate() {
+  const [y,m,d] = pomoSelectedDate.split('-');
+  const label = `${d} de ${MONTHS[parseInt(m)-1]} de ${y}`;
+  document.getElementById('pomo-selected-date-title').textContent = label;
+  
+  const sessions = lsGet('pomo_sessions', []);
+  const daySessions = sessions.filter(s => s.date === pomoSelectedDate);
+  
+  const el = document.getElementById('pomo-cal-session-list');
+  if (daySessions.length > 0) {
+    const totalMin = daySessions.reduce((acc, s) => acc + s.duration, 0);
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+    const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    
+    let html = `<div style="margin-bottom: 16px; font-size: 0.9rem;">Tempo total: <strong>${timeStr}</strong></div>`;
+    html += daySessions.map(s => `<div class="session-entry" style="margin-bottom: 8px;">
+        <span class="s-task">${s.task}</span>
+        <span class="s-time">${s.time}</span>
+        <span class="s-dur">${s.duration}m</span>
+      </div>`).join('');
+    el.innerHTML = html;
+  } else {
+    el.innerHTML = '<div class="empty-state">Nenhuma sessão neste dia</div>';
+  }
+}
+
+function changePomoMonth(dir) {
+  pomoCalMonth += dir;
+  if (pomoCalMonth > 11) { pomoCalMonth = 0; pomoCalYear++; }
+  if (pomoCalMonth < 0) { pomoCalMonth = 11; pomoCalYear--; }
+  renderPomoCalendar();
+}
+
+function goToPomoToday() {
+  pomoCalYear = new Date().getFullYear();
+  pomoCalMonth = new Date().getMonth();
+  pomoSelectedDate = todayStr();
+  renderPomoCalendar();
+}
+
+// ============================================================
 //  POMODORO
 // ============================================================
 let pomoConfig = { foco: 25, pausa: 5, longa: 15, sessions: 4 };
-let pomoState = { mode: 'foco', running: false, timeLeft: 0, totalTime: 0, sessionsDone: 0, interval: null };
+let pomoState = { mode: 'foco', running: false, timeLeft: 0, totalTime: 0, sessionsDone: 0, interval: null, endTime: null };
 
 function updatePomoConfig() {
   pomoConfig.foco = parseInt(document.getElementById('cfg-foco').value) || 25;
@@ -508,7 +724,21 @@ function setMode(mode) {
 function updatePomoDisplay() {
   const m = Math.floor(pomoState.timeLeft / 60);
   const s = pomoState.timeLeft % 60;
-  document.getElementById('pomo-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const timeStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('pomo-display').textContent = timeStr;
+  
+  const ringWrap = document.querySelector('.pomo-ring-wrap');
+  if (pomoState.running) {
+    ringWrap.classList.add('running');
+    document.title = `(${timeStr}) Foco - EstudaVitor`;
+  } else if (pomoState.timeLeft < pomoState.totalTime) {
+    ringWrap.classList.remove('running');
+    document.title = `[PAUSADO] ${timeStr}`;
+  } else {
+    ringWrap.classList.remove('running');
+    document.title = `EstudaVitor`;
+  }
+
   const C = 2 * Math.PI * 88;
   const frac = pomoState.timeLeft / pomoState.totalTime;
   document.getElementById('pomo-ring-prog').style.strokeDashoffset = String(C * (1 - frac));
@@ -531,8 +761,9 @@ function togglePomo() {
   } else {
     pomoState.running = true;
     document.getElementById('pomo-play-btn').textContent = '⏸';
+    pomoState.endTime = Date.now() + pomoState.timeLeft * 1000;
     pomoState.interval = setInterval(() => {
-      pomoState.timeLeft--;
+      pomoState.timeLeft = Math.max(0, Math.ceil((pomoState.endTime - Date.now()) / 1000));
       updatePomoDisplay();
       if (pomoState.timeLeft <= 0) { pomoDone(); }
     }, 1000);
@@ -543,6 +774,9 @@ function pomoDone() {
   clearInterval(pomoState.interval);
   pomoState.running = false;
   document.getElementById('pomo-play-btn').textContent = '▶';
+  document.querySelector('.pomo-ring-wrap').classList.remove('running');
+  alertSound.play().catch(e => console.log('Audio play failed:', e));
+  
   if (pomoState.mode === 'foco') {
     pomoState.sessionsDone++;
     const task = document.getElementById('pomo-task').value || 'Sessão de foco';
@@ -589,8 +823,21 @@ function renderSessionLog() {
         <span class="s-task">${s.task}</span>
         <span class="s-time">${s.time}</span>
         <span class="s-dur">${s.duration}m</span>
+        <button onclick="deleteSession(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;margin-left:8px;" title="Excluir">✕</button>
       </div>`).join('')
     : '<div class="empty-state">Nenhuma sessão hoje</div>';
+}
+
+async function deleteSession(id) {
+  if (!confirm('Deseja realmente excluir esta sessão do histórico?')) return;
+  const res = await apiDel('/api/sessions/' + id);
+  let sessions = lsGet('pomo_sessions', []);
+  sessions = sessions.filter(s => s.id !== id);
+  lsSet('pomo_sessions', sessions);
+  renderSessionLog(); 
+  renderDashboard(); 
+  if (document.getElementById('tab-export').classList.contains('active')) renderExport();
+  toast('🗑️ Sessão removida!');
 }
 
 // ============================================================
@@ -598,7 +845,8 @@ function renderSessionLog() {
 // ============================================================
 function renderDashboard() {
   const today = todayStr();
-  const todayTasks = tasks.filter(t => t.date === today);
+  const manualTasks = tasks.filter(t => !t.isGoogleOnly);
+  const todayTasks = manualTasks.filter(t => t.date === today);
   const doneTasks = todayTasks.filter(t => t.done);
   document.getElementById('stat-today-tasks').textContent = todayTasks.length;
   document.getElementById('stat-today-done').textContent = `${doneTasks.length} concluídas`;
@@ -616,7 +864,7 @@ function renderDashboard() {
   document.getElementById('stat-study-days').textContent = studyDays;
   document.getElementById('stat-study-hours').textContent = `${totalHours}h totais`;
   // Pending
-  document.getElementById('stat-pending').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('stat-pending').textContent = manualTasks.filter(t => !t.done).length;
   // Today tasks in dash
   document.getElementById('dash-today-tasks').innerHTML = todayTasks.length
     ? todayTasks.map(t => `<div class="task-item ${t.done?'done':''}" style="margin-bottom:6px">
@@ -630,6 +878,7 @@ function renderDashboard() {
     ? recentPomos.map(s => `<div class="session-entry">
         <span class="s-task">${s.task}</span>
         <span class="s-dur">🍅 ${s.duration}m</span>
+        <button onclick="deleteSession(${s.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;margin-left:auto;" title="Excluir">✕</button>
       </div>`).join('')
     : '<div class="empty-state">Nenhuma sessão hoje</div>';
 }
@@ -783,8 +1032,286 @@ async function syncGoogleCalendar() {
 }
 
 // ============================================================
-//  INIT
+//  PLANNER
 // ============================================================
+let plannerTasks = [];
+
+async function loadPlanner() {
+  const data = await apiGet('/api/planner');
+  if (data) plannerTasks = data;
+  else plannerTasks = lsGet('planner', []);
+  renderPlanner();
+}
+
+const PLANNER_DAYS = [
+  { id: 'segunda', name: 'Segunda-feira' },
+  { id: 'terca', name: 'Terça-feira' },
+  { id: 'quarta', name: 'Quarta-feira' },
+  { id: 'quinta', name: 'Quinta-feira' },
+  { id: 'sexta', name: 'Sexta-feira' },
+  { id: 'sabado', name: 'Sábado' },
+  { id: 'domingo', name: 'Domingo' }
+];
+
+const PLANNER_SHIFTS = [
+  { id: 'manha', name: 'Manhã', icon: '🌅' },
+  { id: 'tarde', name: 'Tarde', icon: '☀️' },
+  { id: 'noite', name: 'Noite', icon: '🌙' }
+];
+
+async function addPlannerTask(day, shift) {
+  const input = document.getElementById(`new-planner-${day}-${shift}`);
+  const title = input.value.trim();
+  if (!title) return;
+  const task = { id: Date.now(), title, day, shift, done: false, createdAt: new Date().toISOString() };
+  const res = await apiPost('/api/planner', task);
+  if (res) plannerTasks = res;
+  else { plannerTasks.push(task); lsSet('planner', plannerTasks); }
+  input.value = '';
+  renderPlanner();
+}
+
+async function togglePlannerTask(id) {
+  const t = plannerTasks.find(t => t.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  const res = await apiPost('/api/planner/' + id + '/toggle', {});
+  if (res) plannerTasks = res;
+  else lsSet('planner', plannerTasks);
+  renderPlanner();
+}
+
+async function deletePlannerTask(id) {
+  const res = await apiDel('/api/planner/' + id);
+  if (res) plannerTasks = res;
+  else { plannerTasks = plannerTasks.filter(t => t.id !== id); lsSet('planner', plannerTasks); }
+  renderPlanner();
+}
+
+async function editPlannerTask(id) {
+  const t = plannerTasks.find(task => task.id === id);
+  if (!t) return;
+  const newTitle = prompt('Editar meta:', t.title);
+  if (newTitle && newTitle.trim() !== '' && newTitle.trim() !== t.title) {
+    t.title = newTitle.trim();
+    renderPlanner();
+    const res = await apiPut('/api/planner/' + id, { title: t.title });
+    if (res) plannerTasks = res;
+    else lsSet('planner', plannerTasks);
+  }
+}
+
+async function clearPlanner() {
+  if (!confirm('Você tem certeza? Isso vai limpar todos os itens do planner e as metas da semana.')) return;
+  const res = await apiDel('/api/planner');
+  if (res) plannerTasks = res;
+  else { plannerTasks = []; lsSet('planner', plannerTasks); }
+  renderPlanner();
+  toast('🧹 O quadro foi limpo por completo!');
+}
+
+async function dropPlannerTask(event, targetDay, targetShift) {
+  event.preventDefault();
+  const idStr = event.dataTransfer.getData('text/plain');
+  if(!idStr) return;
+  const id = parseInt(idStr);
+  const t = plannerTasks.find(task => task.id === id);
+  if(!t) return;
+  if(t.day === targetDay && t.shift === targetShift) return;
+  
+  t.day = targetDay;
+  t.shift = targetShift;
+  renderPlanner();
+  
+  const res = await apiPut('/api/planner/' + id, { day: targetDay, shift: targetShift });
+  if (res) plannerTasks = res;
+  else lsSet('planner', plannerTasks);
+}
+
+function renderPlanner() {
+  const container = document.getElementById('planner-grid-container');
+  if(!container) return;
+
+  let html = `<div class="notion-board">`;
+
+  // Header: Dias da Semana
+  html += `<div class="notion-days-header">`;
+  PLANNER_DAYS.forEach(d => {
+    const count = plannerTasks.filter(t => t.day === d.id && !t.done).length;
+    html += `<div class="notion-day-title">${d.name} <span class="notion-day-count">${count}</span></div>`;
+  });
+  html += `</div>`;
+
+  // Linhas de Turnos
+  PLANNER_SHIFTS.forEach(s => {
+    const count = plannerTasks.filter(t => t.shift === s.id && !t.done).length;
+    html += `
+      <div class="notion-shift-row">
+        <div class="notion-shift-title">▼ ${s.name} <span class="notion-day-count">${count}</span></div>
+        <div class="notion-shift-grid">
+    `;
+    
+    PLANNER_DAYS.forEach(d => {
+      html += `<div class="notion-cell" id="cell-${d.id}-${s.id}" ondragover="event.preventDefault()" ondrop="dropPlannerTask(event, '${d.id}', '${s.id}')" onmouseenter="hoverContext={type:'planner-cell', day:'${d.id}', shift:'${s.id}'}" onmouseleave="hoverContext={type:null}">`;
+      html += renderPlannerShiftList(d.id, s.id);
+      
+      html += `<button class="notion-add-btn" onclick="showInputCard('${d.id}', '${s.id}')">Nova Tarefa</button>`;
+      html += `
+        <div class="notion-input-card" id="input-card-${d.id}-${s.id}" style="display:none;">
+          <input type="text" id="new-planner-${d.id}-${s.id}" placeholder="Título..." onkeydown="if(event.key==='Enter')addPlannerTask('${d.id}', '${s.id}')" onblur="hideInputCard('${d.id}', '${s.id}')" />
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
+
+  // Renderiza Sidebar Semanal
+  const wContainer = document.getElementById('weekly-todo-list');
+  if (wContainer) {
+    const wTasks = plannerTasks.filter(t => t.day === 'semana' && t.shift === 'geral');
+    wContainer.innerHTML = wTasks.length 
+      ? wTasks.map(t => plannerHTML(t)).join('')
+      : '<div class="empty-state" style="padding:16px;">Nenhuma meta definida</div>';
+  }
+}
+
+function showInputCard(day, shift) {
+  const card = document.getElementById(`input-card-${day}-${shift}`);
+  const input = document.getElementById(`new-planner-${day}-${shift}`);
+  if(card) {
+    card.style.display = 'block';
+    input.focus();
+  }
+}
+
+function hideInputCard(day, shift) {
+  setTimeout(() => {
+    const card = document.getElementById(`input-card-${day}-${shift}`);
+    if(card) card.style.display = 'none';
+  }, 100);
+}
+
+function renderPlannerShiftList(day, shift) {
+  const cellTasks = plannerTasks.filter(t => t.day === day && t.shift === shift);
+  return cellTasks.map(t => plannerHTML(t)).join('');
+}
+
+function plannerHTML(t) {
+  return `
+    <div class="notion-card ${t.done ? 'done' : ''}" draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${t.id}')" onmouseenter="hoverContext={type:'planner',id:${t.id}}" onmouseleave="hoverContext={type:null}">
+      <div style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;" onclick="togglePlannerTask(${t.id})">
+        <div class="task-check ${t.done ? 'checked' : ''}" style="margin-top:2px; flex-shrink:0;"></div>
+        <div class="notion-card-title" style="margin-bottom:0; flex:1;">${t.title}</div>
+      </div>
+      <div style="text-align: right; margin-top: 4px;">
+        <button onclick="editPlannerTask(${t.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px" title="Editar">✏️</button>
+        <button onclick="deletePlannerTask(${t.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px" title="Excluir">✕</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+//  COPY / PASTE & INIT
+// ============================================================
+let hoverContext = { type: null, id: null, day: null, shift: null };
+let appClipboard = null; 
+
+document.addEventListener('keydown', async (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+    if (hoverContext.type === 'planner' && hoverContext.id) {
+       const t = plannerTasks.find(x => x.id === hoverContext.id);
+       if (t) { appClipboard = { type: 'planner', title: t.title }; toast('Copiado: ' + t.title); }
+    } else if (hoverContext.type === 'task' && hoverContext.id) {
+       const t = tasks.find(x => x.id === hoverContext.id);
+       if (t) { appClipboard = { type: 'task', title: t.title, priority: t.priority, note: t.note }; toast('Copiado: ' + t.title); }
+    }
+  }
+
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+    if (!appClipboard) return;
+    
+    if (appClipboard.type === 'planner') {
+      let runDay, runShift;
+      if (hoverContext.type === 'planner-cell') {
+         runDay = hoverContext.day; runShift = hoverContext.shift;
+      } else if (hoverContext.type === 'planner' && hoverContext.id) {
+         const t = plannerTasks.find(x => x.id === hoverContext.id);
+         if (t) { runDay = t.day; runShift = t.shift; }
+      }
+      
+      if (runDay && runShift) {
+        const task = { id: Date.now(), title: appClipboard.title, day: runDay, shift: runShift, done: false, createdAt: new Date().toISOString() };
+        const res = await apiPost('/api/planner', task);
+        if (res) plannerTasks = res;
+        else { plannerTasks.push(task); lsSet('planner', plannerTasks); }
+        renderPlanner();
+        toast('📋 Colado!');
+      } else {
+        toast('⚠️ Passe o mouse em um dia/turno para colar!');
+      }
+    } else if (appClipboard.type === 'task') {
+      let runDate = todayStr();
+      if (hoverContext.type === 'task' && hoverContext.id) {
+         const t = tasks.find(x => x.id === hoverContext.id);
+         if (t) runDate = t.date;
+      }
+      const task = { id: Date.now(), title: appClipboard.title, priority: appClipboard.priority, note: appClipboard.note, date: runDate, done: false, createdAt: new Date().toISOString() };
+      const res = await apiPost('/api/tasks', task);
+      if (res) tasks = res;
+      else { tasks.push(task); lsSet('tasks', tasks); }
+      renderTasks(); renderCalendar(); renderDashboard();
+      toast('📋 Colado!');
+    }
+  }
+});
+
+// ============================================================
+//  HOME WIDGETS
+// ============================================================
+function loadHomeSettings() {
+  const notes = localStorage.getItem('estudavitor_home_notes') || '';
+  const gif = localStorage.getItem('estudavitor_home_gif') || 'https://i.pinimg.com/originals/a0/78/3e/a0783e74bb3aa8d4eecb049d1df5d43e.gif';
+  
+  const notesEl = document.getElementById('home-notes');
+  if (notesEl) notesEl.value = notes;
+  const gifEl = document.getElementById('home-gif-container');
+  if (gifEl) {
+    if (gif.trim().startsWith('<')) {
+      gifEl.innerHTML = gif;
+      const scripts = gifEl.querySelectorAll('script');
+      scripts.forEach(s => {
+        const sc = document.createElement('script');
+        Array.from(s.attributes).forEach(attr => sc.setAttribute(attr.name, attr.value));
+        sc.appendChild(document.createTextNode(s.innerHTML));
+        document.body.appendChild(sc);
+      });
+    } else {
+      gifEl.innerHTML = `<img src="${gif}" style="width: 100%; height: 100%; object-fit: cover;" />`;
+    }
+  }
+}
+
+function saveHomeSettings() {
+  const notesEl = document.getElementById('home-notes');
+  if (notesEl) localStorage.setItem('estudavitor_home_notes', notesEl.value);
+}
+
+function changeHomeGif() {
+  const current = localStorage.getItem('estudavitor_home_gif') || '';
+  const url = prompt('Cole o Link da imagem ou um código HTML de incorporação (<embed>):', current);
+  if (url !== null && url.trim() !== '') {
+    localStorage.setItem('estudavitor_home_gif', url.trim());
+    loadHomeSettings();
+  }
+}
+
 async function init() {
   // Notifications
   if ('Notification' in window && Notification.permission === 'default') {
@@ -799,14 +1326,18 @@ async function init() {
     document.getElementById('cfg-longa').value = cfg.longa;
     document.getElementById('cfg-sessions').value = cfg.sessions;
   }
-  // Load tasks
+  // Load tasks & planner & sessions
   await loadTasks();
+  await loadPlanner();
+  await loadSessions();
   // Init pomodoro
   setMode('foco');
   renderPomoDots();
   renderSessionLog();
   // Set calendar date
   document.getElementById('task-date').value = todayStr();
+  // Widgets
+  loadHomeSettings();
   // Render
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('tab') === 'config') {
@@ -819,7 +1350,7 @@ async function init() {
     const data = await apiGet('/api/tasks');
     if (data) { tasks = data; renderTasks(); renderDashboard(); }
     const sessions = await apiGet('/api/sessions');
-    if (sessions) { lsSet('pomo_sessions', sessions); }
+    if (sessions) { lsSet('pomo_sessions', sessions); renderSessionLog(); renderDashboard(); renderExport(); }
   }, 30000);
 
   // Auto-sync Google Calendar in background (every 5 minutes)

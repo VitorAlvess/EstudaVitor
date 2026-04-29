@@ -9,6 +9,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const GOOGLE_ACCOUNTS_FILE = path.join(DATA_DIR, 'google_accounts.json');
+const PLANNER_FILE = path.join(DATA_DIR, 'planner.json');
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -92,6 +93,60 @@ const server = http.createServer(async (req, res) => {
       writeJSON(TASKS_FILE, tasks);
       jsonRes(res, tasks);
     }
+    else if (url.match(/^\/api\/tasks\/\d+$/) && method === 'PUT') {
+      const id = parseInt(url.split('/')[3]);
+      const updateData = await getBody(req);
+      const tasks = readJSON(TASKS_FILE);
+      const t = tasks.find(t => t.id === id);
+      if (t) {
+        if (updateData.title !== undefined) t.title = updateData.title;
+        if (updateData.priority !== undefined) t.priority = updateData.priority;
+      }
+      writeJSON(TASKS_FILE, tasks);
+      jsonRes(res, tasks);
+    }
+    else if (url === '/api/planner' && method === 'GET') {
+      jsonRes(res, readJSON(PLANNER_FILE));
+    }
+    else if (url === '/api/planner' && method === 'POST') {
+      const task = await getBody(req);
+      const tasks = readJSON(PLANNER_FILE);
+      tasks.push(task);
+      writeJSON(PLANNER_FILE, tasks);
+      jsonRes(res, tasks);
+    }
+    else if (url.match(/^\/api\/planner\/\d+\/toggle$/) && method === 'POST') {
+      const id = parseInt(url.split('/')[3]);
+      const tasks = readJSON(PLANNER_FILE);
+      const t = tasks.find(t => t.id === id);
+      if (t) t.done = !t.done;
+      writeJSON(PLANNER_FILE, tasks);
+      jsonRes(res, tasks);
+    }
+    else if (url === '/api/planner' && method === 'DELETE') {
+      writeJSON(PLANNER_FILE, []);
+      jsonRes(res, []);
+    }
+    else if (url.match(/^\/api\/planner\/\d+$/) && method === 'PUT') {
+      const id = parseInt(url.split('/')[3]);
+      const updateData = await getBody(req);
+      const tasks = readJSON(PLANNER_FILE);
+      const t = tasks.find(t => t.id === id);
+      if (t) {
+        if (updateData.day !== undefined) t.day = updateData.day;
+        if (updateData.shift !== undefined) t.shift = updateData.shift;
+        if (updateData.title !== undefined) t.title = updateData.title;
+      }
+      writeJSON(PLANNER_FILE, tasks);
+      jsonRes(res, tasks);
+    }
+    else if (url.match(/^\/api\/planner\/\d+$/) && method === 'DELETE') {
+      const id = parseInt(url.split('/')[3]);
+      let tasks = readJSON(PLANNER_FILE);
+      tasks = tasks.filter(t => t.id !== id);
+      writeJSON(PLANNER_FILE, tasks);
+      jsonRes(res, tasks);
+    }
     else if (url === '/api/sessions' && method === 'GET') {
       jsonRes(res, readJSON(SESSIONS_FILE));
     }
@@ -99,6 +154,13 @@ const server = http.createServer(async (req, res) => {
       const session = await getBody(req);
       const sessions = readJSON(SESSIONS_FILE);
       sessions.push(session);
+      writeJSON(SESSIONS_FILE, sessions);
+      jsonRes(res, sessions);
+    }
+    else if (url.match(/^\/api\/sessions\/\d+$/) && method === 'DELETE') {
+      const id = parseInt(url.split('/')[3]);
+      let sessions = readJSON(SESSIONS_FILE);
+      sessions = sessions.filter(s => s.id !== id);
       writeJSON(SESSIONS_FILE, sessions);
       jsonRes(res, sessions);
     }
@@ -160,7 +222,7 @@ const server = http.createServer(async (req, res) => {
       let changes = 0;
       const defaultAcc = accounts[0];
 
-      // PULL
+      // PULL: Busca eventos do Google
       for (const acc of accounts) {
         const auth = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
         auth.setCredentials(acc.tokens);
@@ -176,27 +238,31 @@ const server = http.createServer(async (req, res) => {
           for (const ev of events) {
             let task = tasks.find(t => t.googleEventId === ev.id);
             const evDate = ev.start.date || (ev.start.dateTime ? ev.start.dateTime.split('T')[0] : null);
+            
             if (!task && evDate) {
               const isDone = ev.summary && ev.summary.startsWith('[CONCLUÍDO]');
               const cleanTitle = isDone ? ev.summary.replace('[CONCLUÍDO]', '').trim() : (ev.summary || 'Evento Google');
               task = {
                 id: Date.now() + Math.floor(Math.random()*1000),
                 title: cleanTitle, date: evDate, priority: 'media', note: 'Sync: ' + acc.email,
-                done: isDone, createdAt: new Date().toISOString(), googleEventId: ev.id, googleAccount: acc.email
+                done: isDone, createdAt: new Date().toISOString(), 
+                googleEventId: ev.id, googleAccount: acc.email,
+                isGoogleOnly: true // <--- Nova Flag
               };
               tasks.push(task);
               changes++;
-            } else if (task) {
-              if (ev.summary && ev.summary.startsWith('[CONCLUÍDO]') && !task.done) {
-                task.done = true; changes++;
-              }
+            } else if (task && task.isGoogleOnly) {
+                const isDone = ev.summary && ev.summary.startsWith('[CONCLUÍDO]');
+                if (isDone !== task.done) { task.done = isDone; changes++; }
             }
           }
         } catch (e) { console.error('PULL Error', acc.email, e.message); }
       }
-
-      // PUSH
+      
+      // PUSH: Envia tarefas do App para o Google
       for (const t of tasks) {
+        if (t.isGoogleOnly) continue; // Não envia de volta o que veio de lá
+        
         const d = new Date(t.date); d.setHours(0,0,0,0);
         const today = new Date(); today.setHours(0,0,0,0);
         if (d >= today) {
