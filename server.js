@@ -10,6 +10,7 @@ const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const GOOGLE_ACCOUNTS_FILE = path.join(DATA_DIR, 'google_accounts.json');
 const PLANNER_FILE = path.join(DATA_DIR, 'planner.json');
+const HOME_SETTINGS_FILE = path.join(DATA_DIR, 'home_settings.json');
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -107,6 +108,17 @@ const server = http.createServer(async (req, res) => {
     }
     else if (url === '/api/planner' && method === 'GET') {
       jsonRes(res, readJSON(PLANNER_FILE));
+    }
+    else if (url === '/api/home-settings' && method === 'GET') {
+      jsonRes(res, readJSON(HOME_SETTINGS_FILE, { notes: '', gif: '' }));
+    }
+    else if (url === '/api/home-settings' && method === 'POST') {
+      const data = await getBody(req);
+      const current = readJSON(HOME_SETTINGS_FILE, { notes: '', gif: '' });
+      if (data.notes !== undefined) current.notes = data.notes;
+      if (data.gif !== undefined) current.gif = data.gif;
+      writeJSON(HOME_SETTINGS_FILE, current);
+      jsonRes(res, current);
     }
     else if (url === '/api/planner' && method === 'POST') {
       const task = await getBody(req);

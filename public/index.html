@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
   <title>EstudaVitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
@@ -193,6 +194,19 @@
                 <label>Sessões até pausa longa</label>
                 <input type="number" id="cfg-sessions" value="4" min="2" max="8" onchange="updatePomoConfig()" />
               </div>
+              <div class="pomo-setting">
+                <label>Música de Fundo</label>
+                <select id="cfg-music" onchange="updatePomoConfig()">
+                  <option value="">Sem música</option>
+                  <option value="https://streams.ilovemusic.de/iloveradio17.mp3">Rádio Lo-Fi & Foco 📻</option>
+                  <option value="https://streams.ilovemusic.de/iloveradio14.mp3">Rádio Chill & Lounge 📻</option>
+                  <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">Batida Suave (Faixa 1)</option>
+                </select>
+              </div>
+              <div class="pomo-setting">
+                <label>Volume da Música</label>
+                <input type="range" id="cfg-volume" value="0.5" min="0.05" max="1" step="0.05" onchange="updatePomoConfig()" />
+              </div>
             </div>
           </div>
           <div class="card">
@@ -296,6 +310,8 @@
 // ============================================================
 const API = '';  // same-origin
 const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+const pomoMusic = new Audio();
+pomoMusic.loop = true;
 
 async function apiGet(path) {
   try { const r = await fetch(API + path); return await r.json(); } catch { return null; }
@@ -693,7 +709,7 @@ function goToPomoToday() {
 // ============================================================
 //  POMODORO
 // ============================================================
-let pomoConfig = { foco: 25, pausa: 5, longa: 15, sessions: 4 };
+let pomoConfig = { foco: 25, pausa: 5, longa: 15, sessions: 4, music: '', volume: 0.5 };
 let pomoState = { mode: 'foco', running: false, timeLeft: 0, totalTime: 0, sessionsDone: 0, interval: null, endTime: null };
 
 function updatePomoConfig() {
@@ -701,6 +717,24 @@ function updatePomoConfig() {
   pomoConfig.pausa = parseInt(document.getElementById('cfg-pausa').value) || 5;
   pomoConfig.longa = parseInt(document.getElementById('cfg-longa').value) || 15;
   pomoConfig.sessions = parseInt(document.getElementById('cfg-sessions').value) || 4;
+  pomoConfig.music = document.getElementById('cfg-music').value;
+  pomoConfig.volume = parseFloat(document.getElementById('cfg-volume').value);
+  pomoMusic.volume = pomoConfig.volume;
+  
+  if (pomoState.running && pomoState.mode === 'foco') {
+    if (pomoConfig.music) {
+      if (pomoMusic.src !== pomoConfig.music) {
+        pomoMusic.src = pomoConfig.music;
+        pomoMusic.play().catch(e => console.log('Audio play failed:', e));
+      } else if (pomoMusic.paused) {
+        pomoMusic.play().catch(e => console.log('Audio play failed:', e));
+      }
+    } else {
+      pomoMusic.pause();
+      pomoMusic.src = '';
+    }
+  }
+  
   if (!pomoState.running) { setMode(pomoState.mode); }
   lsSet('pomo_config', pomoConfig);
 }
@@ -758,9 +792,16 @@ function togglePomo() {
     clearInterval(pomoState.interval);
     pomoState.running = false;
     document.getElementById('pomo-play-btn').textContent = '▶';
+    pomoMusic.pause();
   } else {
     pomoState.running = true;
     document.getElementById('pomo-play-btn').textContent = '⏸';
+    if (pomoState.mode === 'foco' && pomoConfig.music) {
+      if (pomoMusic.src !== pomoConfig.music) {
+        pomoMusic.src = pomoConfig.music;
+      }
+      pomoMusic.play().catch(e => console.log('Audio play failed:', e));
+    }
     pomoState.endTime = Date.now() + pomoState.timeLeft * 1000;
     pomoState.interval = setInterval(() => {
       pomoState.timeLeft = Math.max(0, Math.ceil((pomoState.endTime - Date.now()) / 1000));
@@ -775,6 +816,7 @@ function pomoDone() {
   pomoState.running = false;
   document.getElementById('pomo-play-btn').textContent = '▶';
   document.querySelector('.pomo-ring-wrap').classList.remove('running');
+  pomoMusic.pause();
   alertSound.play().catch(e => console.log('Audio play failed:', e));
   
   if (pomoState.mode === 'foco') {
@@ -809,6 +851,8 @@ function resetPomo() {
   clearInterval(pomoState.interval);
   pomoState.running = false;
   document.getElementById('pomo-play-btn').textContent = '▶';
+  pomoMusic.pause();
+  pomoMusic.currentTime = 0;
   setMode(pomoState.mode);
 }
 
@@ -1275,14 +1319,31 @@ document.addEventListener('keydown', async (e) => {
 // ============================================================
 //  HOME WIDGETS
 // ============================================================
-function loadHomeSettings() {
-  const notes = localStorage.getItem('estudavitor_home_notes') || '';
-  const gif = localStorage.getItem('estudavitor_home_gif') || 'https://i.pinimg.com/originals/a0/78/3e/a0783e74bb3aa8d4eecb049d1df5d43e.gif';
+const RANDOM_GIFS = [
+  'https://media.tenor.com/adho7VbkF1wAAAAC/lofi-girl.gif',
+  'https://media.tenor.com/Mqku-ywxNEIAAAAC/kagome-inuyasha.gif',
+  'https://media.tenor.com/tPA28vu-svsAAAAC/lofi-girl-rap-battle.gif',
+  'https://media.tenor.com/0hjOGLFaQa0AAAAC/lofi-girl-lofi.gif'
+];
+let sessionRandomGif = RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
+
+async function loadHomeSettings() {
+  const data = await apiGet('/api/home-settings');
+  let notes = '', gif = sessionRandomGif;
+  if (data) {
+    notes = data.notes || '';
+    if (data.gif && data.gif !== 'random') gif = data.gif;
+  } else {
+    notes = localStorage.getItem('estudavitor_home_notes') || '';
+    const lsGif = localStorage.getItem('estudavitor_home_gif');
+    if (lsGif && lsGif !== 'random') gif = lsGif;
+  }
   
   const notesEl = document.getElementById('home-notes');
-  if (notesEl) notesEl.value = notes;
+  if (notesEl && document.activeElement !== notesEl) notesEl.value = notes;
   const gifEl = document.getElementById('home-gif-container');
-  if (gifEl) {
+  if (gifEl && gif !== window._currentGifUrl) {
+    window._currentGifUrl = gif;
     if (gif.trim().startsWith('<')) {
       gifEl.innerHTML = gif;
       const scripts = gifEl.querySelectorAll('script');
@@ -1293,21 +1354,36 @@ function loadHomeSettings() {
         document.body.appendChild(sc);
       });
     } else {
-      gifEl.innerHTML = `<img src="${gif}" style="width: 100%; height: 100%; object-fit: cover;" />`;
+      gifEl.innerHTML = `<img src="${gif}" referrerpolicy="no-referrer" style="width: 100%; height: 100%; object-fit: cover;" />`;
     }
   }
 }
 
+let notesSaveTimeout = null;
 function saveHomeSettings() {
   const notesEl = document.getElementById('home-notes');
-  if (notesEl) localStorage.setItem('estudavitor_home_notes', notesEl.value);
+  if (notesEl) {
+    const val = notesEl.value;
+    localStorage.setItem('estudavitor_home_notes', val);
+    clearTimeout(notesSaveTimeout);
+    notesSaveTimeout = setTimeout(() => {
+      apiPost('/api/home-settings', { notes: val });
+    }, 1000);
+  }
 }
 
-function changeHomeGif() {
-  const current = localStorage.getItem('estudavitor_home_gif') || '';
-  const url = prompt('Cole o Link da imagem ou um código HTML de incorporação (<embed>):', current);
-  if (url !== null && url.trim() !== '') {
-    localStorage.setItem('estudavitor_home_gif', url.trim());
+async function changeHomeGif() {
+  const current = window._currentGifUrl || '';
+  const isRandom = RANDOM_GIFS.includes(current) || current === 'random';
+  const url = prompt('Cole o Link da imagem/GIF ou DEIXE EM BRANCO para GIF ALEATÓRIO:', isRandom ? '' : current);
+  if (url !== null) {
+    const finalUrl = url.trim() === '' ? 'random' : url.trim();
+    localStorage.setItem('estudavitor_home_gif', finalUrl);
+    await apiPost('/api/home-settings', { gif: finalUrl });
+    if (finalUrl === 'random') {
+       sessionRandomGif = RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
+    }
+    window._currentGifUrl = null; // força atualização no próximo load
     loadHomeSettings();
   }
 }
@@ -1320,11 +1396,14 @@ async function init() {
   // Load config
   const cfg = lsGet('pomo_config', null);
   if (cfg) {
-    pomoConfig = cfg;
-    document.getElementById('cfg-foco').value = cfg.foco;
-    document.getElementById('cfg-pausa').value = cfg.pausa;
-    document.getElementById('cfg-longa').value = cfg.longa;
-    document.getElementById('cfg-sessions').value = cfg.sessions;
+    pomoConfig = { ...pomoConfig, ...cfg };
+    document.getElementById('cfg-foco').value = pomoConfig.foco;
+    document.getElementById('cfg-pausa').value = pomoConfig.pausa;
+    document.getElementById('cfg-longa').value = pomoConfig.longa;
+    document.getElementById('cfg-sessions').value = pomoConfig.sessions;
+    if (document.getElementById('cfg-music')) document.getElementById('cfg-music').value = pomoConfig.music || '';
+    if (document.getElementById('cfg-volume')) document.getElementById('cfg-volume').value = pomoConfig.volume !== undefined ? pomoConfig.volume : 0.5;
+    pomoMusic.volume = pomoConfig.volume !== undefined ? pomoConfig.volume : 0.5;
   }
   // Load tasks & planner & sessions
   await loadTasks();
@@ -1351,6 +1430,7 @@ async function init() {
     if (data) { tasks = data; renderTasks(); renderDashboard(); }
     const sessions = await apiGet('/api/sessions');
     if (sessions) { lsSet('pomo_sessions', sessions); renderSessionLog(); renderDashboard(); renderExport(); }
+    loadHomeSettings();
   }, 30000);
 
   // Auto-sync Google Calendar in background (every 5 minutes)
